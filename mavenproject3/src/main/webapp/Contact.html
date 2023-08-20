@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Play with React</title>
+  <script type="application/javascript" src="https://unpkg.com/react@16.0.0/umd/react.production.min.js"></script>
+  <script type="application/javascript" src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js"></script>
+  <script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+  // Obtain the root 
+  const rootElement = document.getElementById('root')
+  // Create a ES6 class component    
+  class ContactList extends React.Component { 
+    // Use the render function to return JSX component      
+    constructor(props) {
+      super(props);
+      this.handleChange = this.handleChange.bind(this);
+      this.handleSubmit = this.handleSubmit.bind(this);
+      this.state = { count: "", contactsstring: "", contacts: [] };
+}
+
+    callAPICount() {
+            fetch("http://localhost:8080/mavenproject3/resources/cst8218.masa0019.mavenproject3.persistence.contact/count")
+                .then(res => res.json())
+                .then(contactData => this.setState({count: contactData}));
+    }
+    callAPI() {
+      fetch("http://localhost:8080/mavenproject3/resources/cst8218.masa0019.mavenproject3.persistence.contact", {
+                headers: {'Accept': 'application/json'}})
+                .then(res => res.json())
+                .then(resjson => this.setState({contacts: resjson}));   
+    }
+    componentDidMount() {
+      this.callAPI();
+      this.callAPICount();
+    }
+    handleChange(event,field,index) {
+   var contacts = this.state.contacts.map((item,key)=>{
+     if (key === index) {  // this one changed
+        return Object.assign({},item,{[field]: event.target.value}); // make a copy of     the item to change    
+     } else {
+        return item;  // this one didn't change
+     }
+   });
+   this.setState({contacts: contacts});
+ }
+ handleSubmit(event) {
+   this.state.contacts.map(item=>{                
+       fetch("http://localhost:8080/mavenproject3/resources/cst8218.masa0019.mavenproject3.persistence.contact/"+item.id,{
+         method: 'PUT',
+         body: JSON.stringify(item),
+         headers: {'Content-type': 'application/json'}})
+         .then(res => res.text());
+  });
+  event.preventDefault();
+}
+
+render() { 
+        const valuesArray = this.state.contacts;
+        return (
+        <div className="contact-list">
+        <h1>Contact List {this.props.name}</h1>
+          <ul>
+            <li>count: {this.state.count}</li>
+            <li>array size: {valuesArray.length} </li>
+            {valuesArray.map((item,key)=>{return <li key={key}>{item.firstname} {item.lastname} {item.homephone} </li>})}          
+          </ul>
+        <form onSubmit={this.handleSubmit}>
+          <table>
+              <tr><th>firstname</th><th>lastname</th><th>homephone</th></tr>
+              {this.state.contacts.map((item,key)=>{
+                  return (
+                      <tr>
+                          <td><input type="text" name={item.id} value={item.firstname} onChange={(e)=>this.handleChange(e,"firstname",key)} /> </td>
+                          <td><input type="text" name={item.id} value={item.lastname} onChange={(e)=>this.handleChange(e,"lastname",key)} /> </td>
+                          <td><input type="text" name={item.id} value={item.homephone} onChange={(e)=>this.handleChange(e,"homephone",key)} /> </td>
+                      </tr>
+                  )
+              })}
+          </table>
+          <input type="submit" value="Submit" />
+        </form>
+        </div>
+      );
+      } 
+    }
+    
+  // Create a function to wrap up your component
+  function App(){
+    return(
+    <div>
+        <ContactList name="Using React!"/>
+    </div>
+    )
+  }
+  // Use the ReactDOM.render to show your component on the browser
+    ReactDOM.render(
+      <App />,
+      rootElement
+    )
+</script>
+</body>
+</html>
